@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+	<meta charset="UTF-8">
+	<title>Rally</title>
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<div class="game-wrapper">
+		<h1 class="visually-hidden">Игра "Rally"</h1>
+		<canvas class="game" width="1024" height="720"></canvas>
+		<div class="pause hidden">
+			<p class="pause-text">ПАУЗА</p>
+		</div>
+		<div class="start-modal">
+			<h2 class="start-modal-title">Правила игры:</h2>
+			<ol>
+				<li class="start-modal-text">Управляйте Автомобилем, используя клавиши со стрелками;</li>
+				<li class="start-modal-text">Таймер отображает время в игре;</li>
+				<li class="start-modal-text">Во время движения избегайте столкновения с другим транспортом;</li>
+				<li class="start-modal-text">Каждое столкновение отнимает одну жизнь;</li>
+				<li class="start-modal-text">При потере всех жизней игра будет окончена;</li>
+				<li class="start-modal-text">Вы можете поставить игру на паузу, нажав на кнопку ESC;</li>
+				<li class="start-modal-text">Цель игры — набрать наибольшее количество игрового времени;</li>
+			</ol>
+			<p class="start-modal-title">Удачи!</p>
+			<input class="start-modal-input" type="text" placeholder="Введите Ваше имя" required>
+			<button class="start-modal-button" disabled>Начать</button>
+		</div>
+	</div>
+	<script src="js/util.js"></script>
+	<script src="js/data.js"></script>
+	<script src="js/draw-game.js"></script>
+</body>
+</html>
