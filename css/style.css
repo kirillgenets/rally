@@ -1,57 +1,36 @@
+/*ОБЩИЕ СТИЛИ*/
+
 body {
 	margin: 0;
 
 	font-family: 'Tahoma', Arial, sans-serif;
 }
 
+/*СТИЛИ СТАРТОВОГО ОКНА*/
+
 .game-wrapper {
-	width: 1024px;
-	height: 720px;
+	width: 720px;
+	height: 1024px;
 	margin: 0 auto;
 
 	position: relative;
+
+	background-image: url(../img/start-bg.jpg);
+	background-size: cover;
+
+	overflow: hidden;
 }
 
-.start-modal {
+.start {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 
 	box-sizing: border-box;
-	width: 500px;
-	height: 350px;
+	width: 550px;
+	height: 480px;
 	padding-top: 10px;
 	border: 2px solid #000;
-
-	position: absolute;
-	left: 50%;
-	top: 50px;
-
-	background-color: #fff;
-
-	transform: translateX(-50%);
-}
-
-.start-modal-title {
-	font-size: 16px;
-	text-align: center;
-}
-
-.start-modal-text {
-	font-size: 14px;
-}
-
-.start-modal-input {
-	margin-bottom: 10px;
-}
-
-.start-modal-button {
-	display: block;
-}
-
-.pause {
-	width: 300px;
-	height: 60px;
 
 	position: absolute;
 	left: 50%;
@@ -62,10 +41,218 @@ body {
 	transform: translateX(-50%);
 }
 
+.start-title {
+	font-size: 20px;
+	text-align: center;
+}
+
+.start-text {
+	font-size: 18px;
+}
+
+.start-input {
+	margin-bottom: 10px;
+
+	font-size: 18px;
+}
+
+.start-button {
+	display: block;
+
+	font-size: 18px;
+}
+
+/*СТИЛИ КОНЕЧНОГО ОКНА*/
+
+.finish {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+
+	box-sizing: border-box;
+	width: 550px;
+	height: 380px;
+	padding-top: 10px;
+	border: 2px solid #000;
+
+	position: absolute;
+	left: 50%;
+	top: 300px;
+
+	background-color: #fff;
+
+	transform: translateX(-50%);
+}
+
+.finish-title {
+	font-size: 20px;
+	text-align: center;
+}
+
+.finish-table {
+	width: 300px;
+	margin: 0 auto;
+	margin-bottom: 20px;
+}
+
+.finish-table, .finish-table td, .finish-table th {
+	border: 1px solid #000;
+	border-collapse: collapse;
+
+	text-align: left;
+}
+
+.finish-button {
+	display: block;
+
+	font-size: 18px;
+}
+
+/*СТИЛИ ИГРЫ*/
+
+.game {
+	width: 100%;
+	height: 100%;
+
+	background: url(../img/grass.jpg);
+}
+
+.top {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+}
+
+.score {
+	width: 95px;
+	margin: 0;
+	padding: 30px;
+	border-right: 2px solid #fff;
+	border-bottom: 2px solid #fff;
+
+	font-size: 36px;
+	color: #fff;
+
+	background-color: #000;
+}
+
+.lifes {
+	display: flex;
+
+	list-style: none;
+
+	margin: 30px 10px 0 0;
+	padding: 0;
+}
+
+.life {
+	width: 80px;
+	height: 40px;
+	margin-right: -20px;
+
+	background: url(../img/orange-car-top-view.svg);
+	background-size: 100%;
+
+	transform: rotate(-90deg);
+}
+
+.life--dead {
+	position: relative;
+
+	background: url(../img/purple-car-top-view.svg);
+	background-size: 100%;
+}
+
+.life--dead::before {
+	content: '';
+
+	height: 50px;
+	width: 10px;
+
+	position: absolute;
+	top: -2px;
+	left: 30px;
+
+	background-color: red;
+}
+
+.line {
+  width: 10px;
+  height: 50px;
+
+  position: absolute;
+  left: 355px;
+
+  background-color: #ffffff;
+}
+
+.help {
+	width: 300px;
+	margin: 0 auto;
+	padding: 10px;
+	border: 2px solid #000;
+
+	position: absolute;
+	left: 50%;
+	top: 450px;
+	z-index: 5;
+
+	font-size: 20px;
+	text-align: center;
+
+	background-color: #fff;
+
+	transform: translateX(-50%);
+}
+
+.road {
+	width: 300px;
+	height: 100%;
+
+	position: absolute;
+	left: 210px;
+	top: 0;
+
+	background-image: url(../img/asphalt.jpg);
+	background-size: cover;
+}
+
+.car, .enemy {
+	width: 50px;
+  height: 100px;
+
+  position: absolute;
+  left: 335px;
+  bottom: 10px;
+
+  background: transparent url('../img/car.png') center / cover no-repeat;
+}
+
+.enemy {
+   background: transparent url('../img/enemy.png') center / cover no-repeat;
+}
+
+.pause {
+	width: 300px;
+	height: 60px;
+
+	position: absolute;
+	left: 50%;
+	top: 480px;
+	z-index: 5;
+
+	background-color: #fff;
+
+	transform: translateX(-50%);
+}
+
 .pause-text {
 	font-size: 18px;
 	text-align: center;
+	text-transform: uppercase;
 }
+
+/*СОКРЫТИЕ*/
 
 .hidden {
 	display: none;
