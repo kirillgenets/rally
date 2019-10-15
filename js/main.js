@@ -257,6 +257,8 @@ class Game {
 			clashAudio.play();
 
 			this._currentEnemy = enemy;
+
+			car.toStart();
 		}		
 	}
 
@@ -331,11 +333,6 @@ class UserCar {
 	}
 
 	draw() {
-		let previousCar = document.querySelector('.car');
-		if (previousCar) {
-			gameContainer.removeChild(previousCar);
-		}
-
 		let carImage = document.createElement('div');
 		carImage.classList.add('car');
 		gameContainer.appendChild(carImage);
@@ -367,6 +364,13 @@ class UserCar {
 
 		this.element.style.bottom = this.y + 'px';
 		this.element.style.left = this.x + 'px';
+	}
+
+	toStart() {
+		this.x = START_CAR_POSITION_X;
+		this.y = START_CAR_POSITION_Y;
+		this.element.style.left = START_CAR_POSITION_X + 'px';
+		this.element.style.bottom = START_CAR_POSITION_Y + 'px';
 	}
 }
 
