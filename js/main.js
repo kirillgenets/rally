@@ -97,6 +97,10 @@ let usersResults = [
 	},
 ];
 
+// JSON-объект c результатами
+
+let usersResultsJSON = '';
+
 // классы
 class Game {
 	constructor(username) {
@@ -206,6 +210,8 @@ class Game {
 		});
 
 		finishModal.classList.remove('hidden');		
+
+		usersResultsJSON = JSON.stringify(usersResults);
 	}
 
 	_moveRoad() {
