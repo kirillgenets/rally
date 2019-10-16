@@ -38,13 +38,16 @@ clashAudio.src = 'sound/clash.wav';
 const finishAudio = new Audio();
 finishAudio.src = 'sound/finish.mp3';
 
-
 // объект, который хранит данные игры
 let settings = {
 	name: 'user',
 	speed: 3,
 	traffic: 3,
 	isStarted: false,
+	result: {},
+	score: 0,
+	lifes: [true, true, true],
+	startTime: '',
 	directions: {
 		up: false,
 		down: false,
@@ -52,6 +55,9 @@ let settings = {
 		right: false
 	}
 };
+
+let lines = ''; // переменная, которая будет хранить линии дорожной разметки
+let enemies = ''; // переменная, которая будет хранить вражеские машины
 
 // массив, который хранит результаты игр пользователей
 let usersResults = JSON.stringify([
@@ -106,265 +112,6 @@ let usersResults = JSON.stringify([
 ]);
 
 // классы
-
-// класс игры
-function Game(username) {
-	this.username = username;
-	this.play = this.play.bind(this);
-	this._lifes = [true, true, true];
-}
-
-Game.prototype.init = function() {
-	gameContainer.classList.remove('hidden');
-
-	this._reset();
-
-	this._drawRoad();
-	this._drawRoadLines();
-	this._drawEnemies();
-
-	this._lines = document.querySelectorAll('.line');
-	this._enemies = document.querySelectorAll('.enemy');
-
-	document.addEventListener('keydown', onGameKeyDown);
-	document.addEventListener('keyup', onGameKeyUp);
-	document.addEventListener('keydown', onEscKeyDown);
-}
-
-Game.prototype.start = function() {
-	if (!settings.isStarted) {
-		gameHelpToStart.classList.add('hidden');
-		settings.isStarted = true;
-		requestAnimationFrame(this.play);
-
-		backgroundAudio.loop = true;
-		backgroundAudio.play();
-
-		this._startTime = new Date().getTime();
-	}
-}
-
-Game.prototype.play = function() {
-	if (settings.isStarted && !gameContainer.classList.contains('paused')) {
-    this._drawCurrentScore();
-    this._moveRoad();
-    this._moveEnemies();
-
-    car.ride();
-
-    if (!this._lifes.includes(true)) {
-    	settings.isStarted = false;
-
-    	this._over();
-    }
-
-    requestAnimationFrame(this.play);
-  }
-}
-
-Game.prototype._reset = function() {
-	document.querySelectorAll('.enemy').forEach((enemy) => {
-		gameContainer.removeChild(enemy);
-	}); // убираем старые вражеские машины
-
-	for (let dir in settings.directions) {
-		settings.directions[dir] = false;
-	} // убираем старые активные направления
-
-	this._lifes = [true, true, true];
-	lifes.forEach((life) => {
-		life.classList.remove('life--dead');
-	}); // восстанавливаем жизни
-}
-
-Game.prototype._over = function() {
-	gameContainer.classList.add('hidden');
-
-	backgroundAudio.pause();
-	backgroundAudio.currentTime = 0.0;
-
-	finishAudio.play();
-
-	this._saveResult();
-	this._showResults();
-
-	document.removeEventListener('keydown', onGameKeyDown);
-	document.removeEventListener('keydown', onEscKeyDown);
-	document.removeEventListener('keyup', onGameKeyUp);
-}
-
-Game.prototype._resetResultsTable = function() {
-	resultsTable.innerHTML = '';
-
-	const row = document.createElement('tr');
-
-	const nameColumn = document.createElement('th');
-	nameColumn.textContent = 'Имя:';
-	row.appendChild(nameColumn);
-
-	const scoreColumn = document.createElement('th');
-	scoreColumn.textContent = 'Очки (сек.):';
-	row.appendChild(scoreColumn);
-
-	resultsTable.appendChild(row);
-}
-
-Game.prototype._saveResult = function() {
-	this._gameResult = {
-		name: this.username,
-		score: this._score
-	};
-
-	usersResults = JSON.parse(usersResults);
-
-	if (usersResults.includes(this._gameResult.name)) {
-		usersResults.splice(usersResults.indexOf(this._gameResult), 1);
-		usersResults.push(this._gameResult);
-	} else {
-		usersResults.push(this._gameResult);
-	}
-}
-
-Game.prototype._showResults = function() {
-	this._resetResultsTable();
-
-	let sortedResults = usersResults.sort((a, b) => b.score - a.score);
-	sortedResults.splice(SHOWN_RESULTS_COUNT, sortedResults.length - SHOWN_RESULTS_COUNT);
-	let isUserResultInTop = sortedResults.includes(this._gameResult);
-
-	if (!isUserResultInTop) sortedResults[sortedResults.length - 1] = this._gameResult;
-	sortedResults.forEach((result) => {
-		const row = document.createElement('tr');
-
-		const nameColumn = document.createElement('td');
-		nameColumn.textContent = result.name;
-		row.appendChild(nameColumn);
-
-		const scoreColumn = document.createElement('td');
-		scoreColumn.textContent = result.score;
-		row.appendChild(scoreColumn);
-
-		resultsTable.appendChild(row);
-	});
-
-	finishModal.classList.remove('hidden');		
-
-	usersResults = JSON.stringify(usersResults);
-}
-
-Game.prototype._moveRoad = function() {
-	this._lines.forEach((line) => {
-		line.y += settings.speed;
-		if (line.y > GAME_HEIGHT) {
-			line.y = START_POSITION;
-		}
-		line.style.top = line.y + 'px';
-	});
-}
-
-Game.prototype._moveEnemies = function() {
-	this._enemies.forEach((enemy) => {
-		enemy.y += settings.speed / 2;
-		let isAccident = this._getAccidentStatus(enemy);
-
-		if (isAccident) {
-			this._decreaseLife(enemy);
-		}
-
-		if (enemy.y >= GAME_HEIGHT) {
-			enemy.y = START_POSITION;
-			enemy.style.left = this._getEnemyLeftPosition() + 'px';
-		}
-
-		enemy.style.top = enemy.y + 'px';
-	});
-}
-
-Game.prototype._decreaseLife = function(enemy) {
-	if (enemy.y <= GAME_HEIGHT - CAR_HEIGHT) {
-		car.toStart();
-
-		for (let i = 0; i < this._lifes.length; i++) {
-			if (this._lifes[i]) {
-				this._lifes[i] = false;
-				break;
-			}
-		}
-
-		this._lifes.forEach((life, i) => {
-			if (!life) {
-				lifes[i].classList.add('life--dead');
-			}
-		});
-
-		clashAudio.pause();
-		clashAudio.currentTime = 0.0; // останавливаем предыдущий звук, на случай, если он не завершился
-		clashAudio.play();
-	}
-}
-
-Game.prototype._getAccidentStatus = function(enemy) {
-	const enemyCoords = enemy.getBoundingClientRect();
-	const userCoords = car.element.getBoundingClientRect();
-
-	return (userCoords.top <= enemyCoords.bottom &&
-      userCoords.bottom >= enemyCoords.top &&
-      userCoords.left <= enemyCoords.right &&
-      userCoords.right >= enemyCoords.left);
-}
-
-Game.prototype._drawCurrentScore = function() {
-	let timeStr = '';
-	let currentTime = Math.floor((new Date().getTime() - this._startTime) / 1000);
-	let currentTimeInMin = Math.floor(currentTime / 60);
-	let currentTimeInSec = currentTime < 60 ? currentTime : currentTime - (60 * currentTimeInMin);
-
-	this._score = currentTime;
-
-	timeStr += currentTimeInMin <= 9 ? '0' + currentTimeInMin + ':' : currentTimeInMin + ':';
-	timeStr += currentTimeInSec <= 9 ? '0' + currentTimeInSec : currentTimeInSec;
-
-	scoreElement.textContent = timeStr;
-}
-
-Game.prototype._drawRoad = function() {
-	const road = document.createElement('div');
-	road.classList.add('road');
-	gameContainer.appendChild(road);
-}
-
-Game.prototype._drawRoadLines = function() {
-	for (let i = 0; i < getQuantityElements(ROAD_LINE_HEIGHT); i++) {
-		const line = document.createElement('div');
-
-		line.classList.add('line');
-		line.y = i * ROAD_LINES_INTERVAL;
-		line.style.top = line.y + 'px';
-
-		gameContainer.appendChild(line);
-	}
-}
-
-Game.prototype._drawEnemies = function() {
-	const density = ENEMIES_INTERVAl * settings.traffic;
-
-  for (let i = 0; i < getQuantityElements(density); i++) {
-    const enemyCar = document.createElement('div');
-
-    enemyCar.classList.add('enemy');
-    enemyCar.y = density * i;
-    enemyCar.x = this._getEnemyLeftPosition()
-    enemyCar.style.left = enemyCar.x + 'px';
-    enemyCar.style.top = enemyCar.y + 'px';
-
-    if (enemyCar.y < GAME_HEIGHT - CAR_HEIGHT * 2) gameContainer.appendChild(enemyCar);
-  }
-}
-
-Game.prototype._getEnemyLeftPosition = function() {
-	return Math.floor(Math.random() * ((ROAD_POSITION_LEFT + ROAD_WIDTH - CAR_WIDTH) - ROAD_POSITION_LEFT) + ROAD_POSITION_LEFT);
-}
-// конец класса игры
 
 // класс пользовательской машины
 function UserCar() {
@@ -437,11 +184,8 @@ function onPlayAgainButtonClick() {
 	finishAudio.pause();
 	finishAudio.currentTime = 0.0;
 
-	clashAudio.pause();
-	clashAudio.currentTime = 0.0;
-
 	// отрисовка игры
-	game.init();
+	initGame();
 
 	// отрисовка пользовательской машины
 	car.toStart();
@@ -457,7 +201,7 @@ function onEscKeyDown(evt) {
 		} else {
 			gameContainer.classList.remove('paused');
 			pauseModal.classList.add('hidden');
-			game.play();
+			playGame();
 
 			backgroundAudio.play();
 		}		
@@ -470,22 +214,22 @@ function onGameKeyDown(evt) {
 			case 'ArrowUp':
 				evt.preventDefault();
 				settings.directions.up = true;
-				game.start();
+				startGame();
 				break;
 			case 'ArrowDown':
 				evt.preventDefault();
 				settings.directions.down = true;
-				game.start();
+				startGame();
 				break;
 			case 'ArrowLeft':
 				evt.preventDefault();
 				settings.directions.left = true;
-				game.start();
+				startGame();
 				break;
 			case 'ArrowRight':
 				evt.preventDefault();
 				settings.directions.right = true;
-				game.start();
+				startGame();
 				break;
 		}
 	}	
@@ -495,19 +239,19 @@ function onGameKeyUp(evt) {
 	switch (evt.key) {
 		case 'ArrowUp':
 			settings.directions.up = false;
-			game.start();
+			startGame();
 			break;
 		case 'ArrowDown':
 			settings.directions.down = false;
-			game.start();
+			startGame();
 			break;
 		case 'ArrowLeft':
 			settings.directions.left = false;
-			game.start();
+			startGame();
 			break;
 		case 'ArrowRight':
 			settings.directions.right = false;
-			game.start();
+			startGame();
 			break;
 	}
 }
@@ -525,14 +269,274 @@ function onStartButtonClick() {
 	startPage.classList.add('hidden');
 
 	// отрисовка игры
-	game = new Game(settings.name)
-	game.init();
+	initGame();
 
 	// отрисовка пользовательской машины
 	car.draw();
 }
 
-// свободные функции
+// функции для работы игры
 function getQuantityElements(heightElement) {
   return GAME_HEIGHT / heightElement + 1;
 };
+
+let initGame = function() {
+	gameContainer.classList.remove('hidden');
+
+	resetGame();
+
+	drawRoad();
+	drawRoadLines();
+	drawEnemies();
+
+	lines = document.querySelectorAll('.line');
+	enemies = document.querySelectorAll('.enemy');
+
+	document.addEventListener('keydown', onGameKeyDown);
+	document.addEventListener('keyup', onGameKeyUp);
+	document.addEventListener('keydown', onEscKeyDown);
+}
+
+let startGame = function() {
+	if (!settings.isStarted) {
+		gameHelpToStart.classList.add('hidden');
+		settings.isStarted = true;
+		requestAnimationFrame(playGame);
+
+		backgroundAudio.play();
+
+		settings.startTime = new Date().getTime();
+	}
+}
+
+let playGame = function() {
+	if (settings.isStarted && !gameContainer.classList.contains('paused')) {
+		car.ride();
+
+    drawCurrentScore();
+    moveRoad();
+    moveEnemies();
+
+    if (!settings.lifes.includes(true)) {
+    	settings.isStarted = false;
+
+    	overGame();
+    }
+
+    requestAnimationFrame(playGame);
+  }
+}
+
+let resetGame = function() {
+	settings.score = 0;
+	scoreElement.textContent = '00:00';
+
+	document.querySelectorAll('.enemy').forEach((enemy) => {
+		gameContainer.removeChild(enemy);
+	}); // убираем старые вражеские машины
+
+	document.querySelectorAll('.line').forEach((line) => {
+		gameContainer.removeChild(line);
+	}); // убираем старые дорожные полосы
+
+	for (let dir in settings.directions) {
+		settings.directions[dir] = false;
+	} // убираем старые активные направления
+
+	settings.lifes = [true, true, true];
+	lifes.forEach((life) => {
+		life.classList.remove('life--dead');
+	}); // восстанавливаем жизни
+
+	clashAudio.pause();
+	clashAudio.currentTime = 0.0;
+
+	clickAudio.pause();
+	clickAudio.currentTime = 0.0;
+}
+
+let overGame = function() {
+	gameContainer.classList.add('hidden');
+
+	backgroundAudio.pause();
+	backgroundAudio.currentTime = 0.0;
+
+	finishAudio.play();
+
+	saveResult();
+	showResults();
+
+	document.removeEventListener('keydown', onGameKeyDown);
+	document.removeEventListener('keydown', onEscKeyDown);
+	document.removeEventListener('keyup', onGameKeyUp);
+}
+
+let resetResultsTable = function() {
+	resultsTable.innerHTML = '';
+
+	const row = document.createElement('tr');
+
+	const nameColumn = document.createElement('th');
+	nameColumn.textContent = 'Имя:';
+	row.appendChild(nameColumn);
+
+	const scoreColumn = document.createElement('th');
+	scoreColumn.textContent = 'Очки (сек.):';
+	row.appendChild(scoreColumn);
+
+	resultsTable.appendChild(row);
+}
+
+let saveResult = function() {
+	settings.result = {
+		name: settings.name,
+		score: settings.score
+	};
+
+	usersResults = JSON.parse(usersResults);
+
+	let lastUserResult = usersResults.filter((result) => result.name === settings.name);
+
+	if (lastUserResult.length > 0) {
+		usersResults.splice(usersResults.indexOf(lastUserResult[0]), 1);
+	}
+
+	usersResults.push(settings.result);
+}
+
+let showResults = function() {
+	resetResultsTable();
+
+	let sortedResults = usersResults.sort((a, b) => b.score - a.score);
+	sortedResults.splice(SHOWN_RESULTS_COUNT, sortedResults.length - SHOWN_RESULTS_COUNT);
+	let isUserResultInTop = sortedResults.includes(settings.result);
+
+	if (!isUserResultInTop) sortedResults[sortedResults.length - 1] = settings.result;
+	sortedResults.forEach((result) => {
+		const row = document.createElement('tr');
+
+		const nameColumn = document.createElement('td');
+		nameColumn.textContent = result.name;
+		row.appendChild(nameColumn);
+
+		const scoreColumn = document.createElement('td');
+		scoreColumn.textContent = result.score;
+		row.appendChild(scoreColumn);
+
+		resultsTable.appendChild(row);
+	});
+
+	finishModal.classList.remove('hidden');		
+
+	usersResults = JSON.stringify(usersResults);
+}
+
+let moveRoad = function() {
+	lines.forEach((line) => {
+		line.y += settings.speed;
+		if (line.y > GAME_HEIGHT) {
+			line.y = START_POSITION;
+		}
+		line.style.top = line.y + 'px';
+	});
+}
+
+let moveEnemies = function() {
+	enemies.forEach((enemy) => {
+		enemy.y += settings.speed / 2;
+
+		if (enemy.y >= GAME_HEIGHT) {
+			enemy.y = START_POSITION;
+			enemy.style.left = getEnemyLeftPosition() + 'px';
+		}
+
+		enemy.style.top = enemy.y + 'px';
+
+		let isAccident = getAccidentStatus(enemy);
+
+		if (isAccident) {
+			if (enemy.y <= GAME_HEIGHT - CAR_HEIGHT) {
+				car.toStart();
+
+				for (let i = 0; i < settings.lifes.length; i++) {
+					if (settings.lifes[i]) {
+						settings.lifes[i] = false;
+						break;
+					}
+				}
+
+				settings.lifes.forEach((life, i) => {
+					if (!life) {
+						lifes[i].classList.add('life--dead');
+					}
+				});
+
+				clashAudio.pause();
+				clashAudio.currentTime = 0.0; // останавливаем предыдущий звук, на случай, если он не завершился
+				clashAudio.play();
+			}
+		}
+	});
+}
+
+let getAccidentStatus = function(enemy) {
+	const enemyCoords = enemy.getBoundingClientRect();
+	const userCoords = car.element.getBoundingClientRect();
+
+	return (userCoords.top <= enemyCoords.bottom &&
+      userCoords.bottom >= enemyCoords.top &&
+      userCoords.left <= enemyCoords.right &&
+      userCoords.right >= enemyCoords.left);
+}
+
+let drawCurrentScore = function() {
+	let timeStr = '';
+	let currentTime = Math.floor((new Date().getTime() - settings.startTime) / 1000);
+	let currentTimeInMin = Math.floor(currentTime / 60);
+	let currentTimeInSec = currentTime < 60 ? currentTime : currentTime - (60 * currentTimeInMin);
+
+	settings.score = currentTime;
+
+	timeStr += currentTimeInMin <= 9 ? '0' + currentTimeInMin + ':' : currentTimeInMin + ':';
+	timeStr += currentTimeInSec <= 9 ? '0' + currentTimeInSec : currentTimeInSec;
+
+	scoreElement.textContent = timeStr;
+}
+
+let drawRoad = function() {
+	const road = document.createElement('div');
+	road.classList.add('road');
+	gameContainer.appendChild(road);
+}
+
+let drawRoadLines = function() {
+	for (let i = 0; i < getQuantityElements(ROAD_LINE_HEIGHT); i++) {
+		const line = document.createElement('div');
+
+		line.classList.add('line');
+		line.y = i * ROAD_LINES_INTERVAL;
+		line.style.top = line.y + 'px';
+
+		gameContainer.appendChild(line);
+	}
+}
+
+let drawEnemies = function() {
+	const density = ENEMIES_INTERVAl * settings.traffic;
+
+  for (let i = 0; i < getQuantityElements(density); i++) {
+    const enemyCar = document.createElement('div');
+
+    enemyCar.classList.add('enemy');
+    enemyCar.y = density * i;
+    enemyCar.x = getEnemyLeftPosition()
+    enemyCar.style.left = enemyCar.x + 'px';
+    enemyCar.style.top = enemyCar.y + 'px';
+
+    if (enemyCar.y < GAME_HEIGHT - CAR_HEIGHT * 2) gameContainer.appendChild(enemyCar);
+  }
+}
+
+let getEnemyLeftPosition = function() {
+	return Math.floor(Math.random() * ((ROAD_POSITION_LEFT + ROAD_WIDTH - CAR_WIDTH) - ROAD_POSITION_LEFT) + ROAD_POSITION_LEFT);
+}

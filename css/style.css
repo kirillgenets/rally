@@ -224,6 +224,7 @@ body {
   position: absolute;
   left: 335px;
   bottom: 10px;
+  z-index: 4;
 
   background: transparent url('../img/car.png') center / cover no-repeat;
 }
