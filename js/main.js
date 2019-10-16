@@ -56,8 +56,10 @@ let settings = {
 	}
 };
 
+let density = ENEMIES_INTERVAl * settings.traffic;
+
 let lines = ''; // переменная, которая будет хранить линии дорожной разметки
-let enemies = ''; // переменная, которая будет хранить вражеские машины
+let enemies = []; // переменная, которая будет хранить вражеские машины
 
 // массив, который хранит результаты игр пользователей
 let usersResults = JSON.stringify([
@@ -161,6 +163,50 @@ UserCar.prototype.toStart = function() {
 	this.element.style.bottom = START_CAR_POSITION_Y + 'px';	
 }
 // конец класса пользовательской машины
+
+// класс вражеской машины
+function Enemy(number) {
+	this._number = number;
+
+	this.y = density * this._number;
+	this.x = this._getLeftPosition();
+}
+
+Enemy.prototype._getLeftPosition = function() {
+	return Math.floor(Math.random() * ((ROAD_POSITION_LEFT + ROAD_WIDTH - CAR_WIDTH) - ROAD_POSITION_LEFT) + ROAD_POSITION_LEFT);
+}
+
+Enemy.prototype.draw = function() {
+	const enemyCar = document.createElement('div');
+
+  enemyCar.classList.add('enemy');
+  enemyCar.y = density * this._number;
+  enemyCar.x = this._getLeftPosition()
+  enemyCar.style.left = enemyCar.x + 'px';
+  enemyCar.style.top = enemyCar.y + 'px';
+
+  if (enemyCar.y < GAME_HEIGHT - CAR_HEIGHT * 2) {
+  	gameContainer.appendChild(enemyCar);
+
+  	this.element = enemyCar;
+  	enemies.push(this);
+  }
+}
+
+Enemy.prototype.changeLeft = function() {
+	this.element.style.left = this._getLeftPosition() + 'px';
+}
+
+Enemy.prototype.ride = function() {
+	this.y += settings.speed / 2;
+
+	if (this.y >= GAME_HEIGHT) {
+		this.y = START_POSITION;
+		this.changeLeft();
+	}
+
+	this.element.style.top = this.y + 'px';
+}
 
 // создание необходимых объектов
 let game = '';
@@ -290,7 +336,6 @@ let initGame = function() {
 	drawEnemies();
 
 	lines = document.querySelectorAll('.line');
-	enemies = document.querySelectorAll('.enemy');
 
 	document.addEventListener('keydown', onGameKeyDown);
 	document.addEventListener('keyup', onGameKeyUp);
@@ -443,19 +488,12 @@ let moveRoad = function() {
 
 let moveEnemies = function() {
 	enemies.forEach((enemy) => {
-		enemy.y += settings.speed / 2;
-
-		if (enemy.y >= GAME_HEIGHT) {
-			enemy.y = START_POSITION;
-			enemy.style.left = getEnemyLeftPosition() + 'px';
-		}
-
-		enemy.style.top = enemy.y + 'px';
+		enemy.ride();
 
 		let isAccident = getAccidentStatus(enemy);
 
 		if (isAccident) {
-			if (enemy.y <= GAME_HEIGHT - CAR_HEIGHT) {
+			if (enemy.y <= GAME_HEIGHT - CAR_HEIGHT * 2) {
 				car.toStart();
 
 				for (let i = 0; i < settings.lifes.length; i++) {
@@ -480,7 +518,7 @@ let moveEnemies = function() {
 }
 
 let getAccidentStatus = function(enemy) {
-	const enemyCoords = enemy.getBoundingClientRect();
+	const enemyCoords = enemy.element.getBoundingClientRect();
 	const userCoords = car.element.getBoundingClientRect();
 
 	return (userCoords.top <= enemyCoords.bottom &&
@@ -522,21 +560,9 @@ let drawRoadLines = function() {
 }
 
 let drawEnemies = function() {
-	const density = ENEMIES_INTERVAl * settings.traffic;
-
   for (let i = 0; i < getQuantityElements(density); i++) {
-    const enemyCar = document.createElement('div');
+  	const enemy = new Enemy(i);
 
-    enemyCar.classList.add('enemy');
-    enemyCar.y = density * i;
-    enemyCar.x = getEnemyLeftPosition()
-    enemyCar.style.left = enemyCar.x + 'px';
-    enemyCar.style.top = enemyCar.y + 'px';
-
-    if (enemyCar.y < GAME_HEIGHT - CAR_HEIGHT * 2) gameContainer.appendChild(enemyCar);
+    enemy.draw();
   }
-}
-
-let getEnemyLeftPosition = function() {
-	return Math.floor(Math.random() * ((ROAD_POSITION_LEFT + ROAD_WIDTH - CAR_WIDTH) - ROAD_POSITION_LEFT) + ROAD_POSITION_LEFT);
 }
