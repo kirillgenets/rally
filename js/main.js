@@ -451,7 +451,7 @@ function saveResult() {
 	usersResults = JSON.parse(usersResults);
 
 	const lastUserResult = usersResults.filter(function (result) {
-		result.name === settings.name
+		return result.name === settings.name
 	});
 
 	if (lastUserResult.length > 0) usersResults.splice(usersResults.indexOf(lastUserResult[0]), 1);
