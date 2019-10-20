@@ -499,10 +499,10 @@ function moveRoad() {
 }
 
 function moveEnemies() {
-	for (let i = 0; i < enemies.length; i++) {
-		enemies[i].ride();
+	enemies.forEach(function (enemy) {
+		enemy.ride();
 
-		enemies[i].isAccident(car, function () {
+		enemy.isAccident(car, function () {
 			car.toStart();
 
 			gameHelpToStart.classList.remove('hidden');
@@ -528,7 +528,7 @@ function moveEnemies() {
 			settings.isStarted = false;
 			settings.pauseTime = new Date().getTime();
 		});
-	}
+	});
 }
 
 function drawCurrentScore() {
