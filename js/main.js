@@ -135,14 +135,30 @@ function UserCar(props) {
 	}
 
 	this.ride = function () {
-		if (this.directions.up) this._y += this._speed;	
-		if (this.directions.down) this._y -= this._speed;
-		if (this.directions.left) this._x -= this._speed;
-		if (this.directions.right) this._x += this._speed;
-		if (this._x < this._minX) this._x = this._minX;
-		if (this._x > this._maxX) this._x = this._maxX;
-		if (this._y < this._minY) this._y = this._minY;
-		if (this._y > this._maxY) this._y = this._maxY;
+		if (this.directions.up) {
+			this._y += this._speed;	
+		} 
+		if (this.directions.down) {
+			this._y -= this._speed;
+		} 
+		if (this.directions.left) {
+			this._x -= this._speed;
+		} 
+		if (this.directions.right) {
+			this._x += this._speed;
+		} 
+		if (this._x < this._minX) {
+			this._x = this._minX;
+		} 
+		if (this._x > this._maxX) {
+			this._x = this._maxX;
+		} 
+		if (this._y < this._minY) {
+			this._y = this._minY;
+		} 
+		if (this._y > this._maxY) {
+			this._y = this._maxY;
+		} 
 
 		this.element.style.bottom = this._y + 'px';
 		this.element.style.left = this._x + 'px';
@@ -220,7 +236,9 @@ function ObjectOnRoad(props) {
 	}
 
 	this.isAccident = function (car, callback) {
-		if (this._getAccidentStatus(car) && this.y <= this._maxY - this._height * 2) callback();
+		if (this._getAccidentStatus(car)) {
+			callback();
+		} 
 	}
 }
 
@@ -249,8 +267,7 @@ function onPlayAgainButtonClick() {
 	settings.name = nameField.value; // записываем имя пользователя в объект данных игры
 	finishModal.classList.add('hidden');
 
-	finishAudio.pause();
-	finishAudio.currentTime = 0.0;
+	stopAudio(finishAudio);
 
 	initGame();
 	car.toStart();
@@ -261,10 +278,15 @@ function onEscKeyDown(evt) {
 		gameContainer.classList.toggle('paused');
 		pauseModal.classList.toggle('hidden');
 
-		if (backgroundAudio.paused) backgroundAudio.play();
-		else backgroundAudio.pause();
+		if (backgroundAudio.paused) {
+			backgroundAudio.play();
+		} else {
+			backgroundAudio.pause();
+		}
 
-		if (!gameContainer.classList.contains('paused')) playGame();
+		if (!gameContainer.classList.contains('paused')) {
+			playGame();
+		} 
 	});
 }
 
@@ -313,8 +335,11 @@ function onGameKeyUp(evt) {
 }
 
 function onNameFieldInput() {
-	if (nameField.value !== '') startButton.removeAttribute('disabled');
-	else startButton.setAttribute('disabled', true);
+	if (nameField.value !== '') {
+		startButton.removeAttribute('disabled');
+	} else {
+		startButton.setAttribute('disabled', true);
+	}
 }
 
 function onStartButtonClick() {
@@ -349,7 +374,9 @@ function startGame() {
 		gameHelpToStart.classList.add('hidden');
 		settings.isStarted = true;
 
-		if (!settings.startTime) settings.startTime = new Date().getTime();
+		if (!settings.startTime) {
+			settings.startTime = new Date().getTime();
+		} 
 
 		if (settings.pauseTime) {
 			settings.startTime += (new Date().getTime() - settings.pauseTime);
@@ -383,9 +410,7 @@ function resetGame() {
 	settings.score = 0;
 	scoreElement.textContent = '00:00';
 
-	document.querySelectorAll('.enemy').forEach(function (enemy) {
-		gameContainer.removeChild(enemy);
-	}); // убираем старые вражеские машины
+	clearEnemies();
 
 	document.querySelectorAll('.line').forEach(function (line) {
 		gameContainer.removeChild(line);
@@ -400,11 +425,8 @@ function resetGame() {
 		life.classList.remove('life--dead');
 	}); // восстанавливаем жизни
 
-	clashAudio.pause();
-	clashAudio.currentTime = 0.0;
-
-	clickAudio.pause();
-	clickAudio.currentTime = 0.0;
+	stopAudio(clashAudio);
+	stopAudio(clickAudio);
 }
 
 function overGame() {
@@ -413,8 +435,7 @@ function overGame() {
 
 	gameContainer.classList.add('hidden');
 
-	backgroundAudio.pause();
-	backgroundAudio.currentTime = 0.0;
+	stopAudio(backgroundAudio);
 
 	finishAudio.play();
 
@@ -454,7 +475,9 @@ function saveResult() {
 		return result.name === settings.name
 	});
 
-	if (lastUserResult.length > 0) usersResults.splice(usersResults.indexOf(lastUserResult[0]), 1);
+	if (lastUserResult.length > 0) {
+		usersResults.splice(usersResults.indexOf(lastUserResult[0]), 1);
+	} 
 
 	usersResults.push(settings.result);
 }
@@ -469,7 +492,9 @@ function showResults() {
 	sortedResults.splice(SHOWN_RESULTS_COUNT, sortedResults.length - SHOWN_RESULTS_COUNT);
 	const isUserResultInTop = sortedResults.includes(settings.result);
 
-	if (!isUserResultInTop) sortedResults[sortedResults.length - 1] = settings.result;
+	if (!isUserResultInTop) {
+		sortedResults[sortedResults.length - 1] = settings.result;
+	} 
 	sortedResults.forEach(function (result) {
 		const row = document.createElement('tr');
 
@@ -515,15 +540,18 @@ function moveEnemies() {
 			}
 
 			settings.lifes.forEach(function (life, i) {
-				if (!life) lifes[i].classList.add('life--dead');
+				if (!life) {
+					lifes[i].classList.add('life--dead');
+				} 
 			});
 
-			clashAudio.pause();
-			clashAudio.currentTime = 0.0; // останавливаем предыдущий звук, на случай, если он не завершился
+			clearEnemies();
+			drawEnemies();
+
+			stopAudio(clashAudio);
 			clashAudio.play();
 
-			backgroundAudio.pause();
-			backgroundAudio.currentTime = 0.0;
+			stopAudio(backgroundAudio);
 
 			settings.isStarted = false;
 			settings.pauseTime = new Date().getTime();
@@ -550,6 +578,12 @@ function drawRoad() {
 	road = document.createElement('div');
 	road.classList.add('road');
 	gameContainer.appendChild(road);
+}
+
+function clearEnemies() {
+	document.querySelectorAll('.enemy').forEach(function (enemy) {
+		gameContainer.removeChild(enemy);
+	});
 }
 
 function drawRoadLines() {
@@ -587,5 +621,12 @@ function drawEnemies() {
 
 function isEscEvent(evt, callback) {
 	evt.preventDefault();
-	if (evt.key === 'Escape') callback();
+	if (evt.key === 'Escape') {
+		callback();
+	}
+}
+
+function stopAudio(audio) {
+	audio.pause();
+	audio.currentTime = 0.0;
 }
