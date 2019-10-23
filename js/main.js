@@ -124,7 +124,7 @@ function UserCar(props) {
 	this._minX = props.minX || 210;
 	this._minY = props.minY || 0;
 	this._maxX = props.maxX || 460;
-	this._maxY = props.maxY || 1024;
+	this._maxY = props.maxY || 924;
 
 	this.draw = function () {
 		const carImage = document.createElement('div');
@@ -251,7 +251,7 @@ const car = new UserCar({
 	minX: ROAD_POSITION_LEFT,
 	maxX: MAX_CAR_POSITION_X,
 	minY: MIN_CAR_POSITION_Y,
-	maxY: GAME_HEIGHT
+	maxY: GAME_HEIGHT - CAR_HEIGHT
 });
 
 nameField.addEventListener('input', onNameFieldInput);
